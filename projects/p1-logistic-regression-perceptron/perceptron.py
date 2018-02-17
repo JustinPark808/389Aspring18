@@ -24,13 +24,13 @@ class Perceptron:
 
         :return: Returns the predicted class (either 0 or 1).
         """
-        
+        score = 0
+        for coef, feature in zip(self.coef, features):
+            score += coef * feature
 
+        return 0 if score < 0 else 1
 
-
-        return 1.0
-
-    def sg_update(self, features, label):
+    def sg_update(self, features, label, decay, epoch):
         """
         Computes the update to the weights based on a predicted example.
 
@@ -38,13 +38,21 @@ class Perceptron:
         :param label: Corresponding label for features.
         """
         yhat = self.predict(features)
-        
+        error = label - yhat
 
+        # Update bias
+        self.bias += self.l_rate * error
 
+        # Update each coefficient
+        for i, feature in enumerate(features):
+            self.coef[i] += self.l_rate * error * feature
+
+        # Update learning rate
+        self.l_rate *= 1 / (1 + decay * epoch)
 
         return
 
-    def train(self, X, y):
+    def train(self, X, y, decay):
         """
         Trains the model on training data.
 
@@ -53,5 +61,5 @@ class Perceptron:
         """
         for epoch in range(self.epochs):
             for features, label in zip(X, y):
-                self.sg_update(features, label)
+                self.sg_update(features, label, decay, epoch)
         return self.bias, self.coef

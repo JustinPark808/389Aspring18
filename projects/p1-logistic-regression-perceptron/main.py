@@ -17,6 +17,18 @@ def normalize_dataframe(df):
 
     :return: normalized dataframe
     """
+    # Class variable feature name
+    feature_name = 'Class variable (0: no diabetes, 1: diabetes)'
+
+    # Drop class variable column
+    df_norm = df.drop(columns=[feature_name])
+
+    # Normalize df_norm
+    df_norm = (df_norm - df_norm.mean()) / (df_norm.max() - df_norm.min())
+
+    # Add class variable column
+    df_norm.loc[:, feature_name] = df[feature_name]
+
     return df
 
 
@@ -109,6 +121,8 @@ if __name__ == '__main__':
                            type=int, default=100, required=False)
     argparser.add_argument('--batch_size', help='Number of samples per batch',
                            type=int, default=10, required=False)
+    argparser.add_argument('--decay', help='Rate of decay of learning rate',
+                           type=float, default=0, required=False)
     args = argparser.parse_args()
 
     file_name = 'diabetes.csv'
@@ -131,15 +145,15 @@ if __name__ == '__main__':
     # Logistic Model
     print('\n[INFO] Training logistic regression model.')
     logreg = LogReg(args.lr_logreg, args.epochs, len(X_train[0]))
-    bias_logreg, weights_logreg = logreg.train(X_train, y_train)
+    bias_logreg, weights_logreg = logreg.train(X_train, y_train, args.decay)
     y_logistic = [round(logreg.predict(example)) for example in X_test]
 
     # Perceptron Model
     print('[INFO] Training Perceptron model.')
     perceptron = Perceptron(args.lr_perceptron, args.epochs, len(X_train[0]))
-    bias_perceptron, weights_perceptron = perceptron.train(X_train, y_train)
+    bias_perceptron, weights_perceptron = perceptron.train(X_train, y_train, args.decay)
     y_perceptron = [round(perceptron.predict(example)) for example in X_test]
-
+    
     # Compare accuracies
     accuracy_logistic = get_accuracy(y_logistic, y_test)
     accuracy_perceptron = get_accuracy(y_perceptron, y_test)

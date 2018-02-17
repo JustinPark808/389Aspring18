@@ -39,26 +39,36 @@ class LogReg:
 
         :return: Returns the predicted probability (between 0 and 1).
         """
+        score = 0
+        for coef, feature in zip(self.coef, features):
+            score += coef * feature
 
+        return self.sigmoid(score)
 
-
-        return 1.0
-
-    def sg_update(self, features, label):
+    def sg_update(self, features, label, decay, epoch):
         """
         Computes the update to the weights based on a predicted example.
 
         :param features: Features to train on.
         :param label: Corresponding label for features.
         """
+        # Get predicted value and error
         yhat = self.predict(features)
-        
+        error = label - yhat
 
+        # Update bias
+        self.bias += self.l_rate * error * yhat * (1 - yhat)
 
+        # Update each coefficient
+        for i, feature in enumerate(features):
+            self.coef[i] += self.l_rate * error * feature * yhat * (1 - yhat)
+
+        # Update the learning rate
+        self.l_rate *= 1 / (1 + decay * epoch)
 
         return
 
-    def train(self, X, y):
+    def train(self, X, y, decay):
         """
         Computes logistic regression coefficients using stochastic gradient descent.
 
@@ -69,5 +79,6 @@ class LogReg:
         """
         for epoch in range(self.epochs):
             for features, label in zip(X, y):
-                self.sg_update(features, label)
+                self.sg_update(features, label, decay, epoch)
+
         return self.bias, self.coef
